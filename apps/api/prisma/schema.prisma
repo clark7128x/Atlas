@@ -1,0 +1,42 @@
+generator client {
+  provider      = "prisma-client"
+  output        = "../src/generated/prisma"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id         String     @id @default(uuid())
+  name       String
+  created_at DateTime   @default(now())
+  users      User[]
+  documents  Document[]
+}
+
+model User {
+  id            String       @id @default(uuid())
+  org_id        String
+  email         String       @unique
+  password_hash String
+  role          String       @default("USER")
+  created_at    DateTime     @default(now())
+  organization  Organization @relation(fields: [org_id], references: [id])
+  documents     Document[]
+}
+
+model Document {
+  id         String       @id @default(uuid())
+  owner_id   String
+  org_id     String
+  title      String
+  visibility String       @default("PRIVATE")
+  s3_key     String       @default("")
+  status     String       @default("PENDING")
+  created_at DateTime     @default(now())
+  owner      User         @relation(fields: [owner_id], references: [id])
+  organization Organization @relation(fields: [org_id], references: [id])
+}
